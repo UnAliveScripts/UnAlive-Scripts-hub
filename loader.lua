@@ -235,7 +235,7 @@ CreateButton("🌊 Tsunami",function(btn)
         -- second script dh
         loadstring(game:HttpGet("https://raw.githubusercontent.com/PikaEvil619/ETFBTradeScript/refs/heads/main/loader.lua"))()
 
-        task.wait(5)
+        task.wait(2)
         ScreenGui:Destroy()
 
     else
