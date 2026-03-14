@@ -8,27 +8,33 @@ local FileName = "UnAlive_Choice_Ultimate.txt"
 local DiscordInvite = "https://discord.gg/v8s9RQ8M8b"
 
 --====================================================
--- ANTI-KICK (UNCHANGED)
+-- ANTI-KICK
 --====================================================
 
 local function ApplyBypass()
-    local success, err = pcall(function()
-        local old; old = hookmetamethod(game, "__namecall", function(self, ...)
+    pcall(function()
+        local old
+        old = hookmetamethod(game,"__namecall",function(self,...)
             local method = getnamecallmethod()
-            if self == LP and (method == "Kick" or method == "kick") then return nil end
-            return old(self, ...)
+            if self == LP and (method=="Kick" or method=="kick") then
+                return nil
+            end
+            return old(self,...)
         end)
-        hookfunction(LP.Kick, function(self, ...) return nil end)
+
+        hookfunction(LP.Kick,function() return nil end)
     end)
 end
 
 local function ExecuteWithDiscord(url)
     ApplyBypass()
+
     task.delay(3,function()
         if setclipboard then
             setclipboard(DiscordInvite)
         end
     end)
+
     loadstring(game:HttpGet(url))()
 end
 
@@ -56,18 +62,16 @@ local ScreenGui = Instance.new("ScreenGui",game.CoreGui)
 ScreenGui.ResetOnSpawn = false
 
 local Main = Instance.new("Frame",ScreenGui)
-Main.Size = UDim2.new(0,420,0,200)
-Main.Position = UDim2.new(.5,-210,.5,-100)
+Main.Size = UDim2.new(0,0,0,0)
+Main.Position = UDim2.new(.5,-210,.5,-110)
 Main.BackgroundColor3 = Background
 Main.BorderSizePixel = 0
 Main.Active = true
 Main.Draggable = true
 Instance.new("UICorner",Main).CornerRadius = UDim.new(0,10)
 
--- open animation
-Main.Size = UDim2.new(0,0,0,0)
 TweenService:Create(Main,TweenInfo.new(.35,Enum.EasingStyle.Quart),{
-    Size = UDim2.new(0,420,0,200)
+    Size = UDim2.new(0,420,0,220)
 }):Play()
 
 --====================================================
@@ -77,7 +81,7 @@ TweenService:Create(Main,TweenInfo.new(.35,Enum.EasingStyle.Quart),{
 local Header = Instance.new("Frame",Main)
 Header.Size = UDim2.new(1,0,0,36)
 Header.BackgroundColor3 = Color3.fromRGB(25,25,30)
-Instance.new("UICorner",Header).CornerRadius = UDim.new(0,10)
+Instance.new("UICorner",Header)
 
 local Title = Instance.new("TextLabel",Header)
 Title.Size = UDim2.new(1,-90,1,0)
@@ -97,7 +101,7 @@ local ControlBox = Instance.new("Frame",Header)
 ControlBox.Size = UDim2.new(0,70,0,26)
 ControlBox.Position = UDim2.new(1,-75,0,5)
 ControlBox.BackgroundColor3 = Color3.fromRGB(35,35,42)
-Instance.new("UICorner",ControlBox).CornerRadius = UDim.new(0,6)
+Instance.new("UICorner",ControlBox)
 
 local Layout = Instance.new("UIListLayout",ControlBox)
 Layout.FillDirection = Enum.FillDirection.Horizontal
@@ -129,55 +133,104 @@ Container.Size = UDim2.new(1,0,1,-36)
 Container.Position = UDim2.new(0,0,0,36)
 Container.BackgroundTransparency = 1
 
--- sidebar
+--====================================================
+-- SIDEBAR
+--====================================================
 
 local Sidebar = Instance.new("Frame",Container)
 Sidebar.Size = UDim2.new(0,120,1,0)
 Sidebar.BackgroundColor3 = Color3.fromRGB(22,22,28)
-Instance.new("UICorner",Sidebar).CornerRadius = UDim.new(0,10)
+Instance.new("UICorner",Sidebar)
 
-local GamesTab = Instance.new("TextLabel",Sidebar)
-GamesTab.Size = UDim2.new(1,-16,0,36)
-GamesTab.Position = UDim2.new(0,8,0,10)
-GamesTab.Text = "Games"
-GamesTab.BackgroundColor3 = Color3.fromRGB(35,35,42)
-GamesTab.TextColor3 = Color3.new(1,1,1)
-GamesTab.Font = Enum.Font.GothamBold
-GamesTab.TextSize = 13
-Instance.new("UICorner",GamesTab)
+local Tabs = {}
+
+local function CreateTab(name)
+    local Tab = Instance.new("TextButton",Sidebar)
+    Tab.Size = UDim2.new(1,-16,0,36)
+    Tab.Position = UDim2.new(0,8,0,10 + (#Tabs*42))
+    Tab.Text = name
+    Tab.BackgroundColor3 = Color3.fromRGB(35,35,42)
+    Tab.TextColor3 = Color3.new(1,1,1)
+    Tab.Font = Enum.Font.GothamBold
+    Tab.TextSize = 13
+    Instance.new("UICorner",Tab)
+
+    table.insert(Tabs,Tab)
+
+    return Tab
+end
+
+local GamesTab = CreateTab("Games")
+local ScriptsTab = CreateTab("Scripts")
+local UtilsTab = CreateTab("Utilities")
 
 --====================================================
--- FIXED DIVIDER (NON-ROUNDED LOOK)
+-- DIVIDER
 --====================================================
 
 local Divider = Instance.new("Frame",Container)
 Divider.Position = UDim2.new(0,120,0,0)
-Divider.Size = UDim2.new(0,2,1,-10)
+Divider.Size = UDim2.new(0,2,1,0)
 Divider.BackgroundColor3 = Color3.fromRGB(40,40,50)
-Divider.BorderSizePixel = 0
-
--- page
-
-local Page = Instance.new("Frame",Container)
-Page.Position = UDim2.new(0,121,0,0)
-Page.Size = UDim2.new(1,-121,1,0)
-Page.BackgroundTransparency = 1
-
-local Layout2 = Instance.new("UIListLayout",Page)
-Layout2.Padding = UDim.new(0,12)
-
-local Padding = Instance.new("UIPadding",Page)
-Padding.PaddingTop = UDim.new(0,12)
-Padding.PaddingLeft = UDim.new(0,12)
-Padding.PaddingRight = UDim.new(0,12)
 
 --====================================================
--- BUTTON FUNCTION
+-- PAGE CREATOR
 --====================================================
 
-local function CreateButton(text,callback)
+local function CreatePage()
 
-    local Button = Instance.new("TextButton",Page)
+    local Page = Instance.new("ScrollingFrame",Container)
+    Page.Position = UDim2.new(0,121,0,0)
+    Page.Size = UDim2.new(1,-121,1,0)
+    Page.BackgroundTransparency = 1
+    Page.ScrollBarThickness = 5
+    Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    Page.CanvasSize = UDim2.new()
+    Page.Visible = false
+
+    local Layout = Instance.new("UIListLayout",Page)
+    Layout.Padding = UDim.new(0,12)
+
+    local Padding = Instance.new("UIPadding",Page)
+    Padding.PaddingTop = UDim.new(0,12)
+    Padding.PaddingLeft = UDim.new(0,12)
+    Padding.PaddingRight = UDim.new(0,12)
+
+    return Page
+end
+
+local GamesPage = CreatePage()
+local ScriptsPage = CreatePage()
+local UtilsPage = CreatePage()
+
+GamesPage.Visible = true
+
+local function SwitchPage(page)
+    GamesPage.Visible = false
+    ScriptsPage.Visible = false
+    UtilsPage.Visible = false
+    page.Visible = true
+end
+
+GamesTab.MouseButton1Click:Connect(function()
+    SwitchPage(GamesPage)
+end)
+
+ScriptsTab.MouseButton1Click:Connect(function()
+    SwitchPage(ScriptsPage)
+end)
+
+UtilsTab.MouseButton1Click:Connect(function()
+    SwitchPage(UtilsPage)
+end)
+
+--====================================================
+-- BUTTON CREATOR
+--====================================================
+
+local function CreateButton(page,text,callback)
+
+    local Button = Instance.new("TextButton",page)
     Button.Size = UDim2.new(1,0,0,42)
     Button.BackgroundColor3 = ButtonColor
     Button.Text = text
@@ -187,15 +240,30 @@ local function CreateButton(text,callback)
     Instance.new("UICorner",Button)
 
     Button.MouseEnter:Connect(function()
+
         TweenService:Create(Button,TweenInfo.new(.15),{
             BackgroundColor3 = Accent
         }):Play()
+
+        local Glow = Instance.new("UIStroke",Button)
+        Glow.Color = Accent
+        Glow.Thickness = 2
+        Glow.Transparency = .4
+
     end)
 
     Button.MouseLeave:Connect(function()
+
         TweenService:Create(Button,TweenInfo.new(.15),{
             BackgroundColor3 = ButtonColor
         }):Play()
+
+        for _,v in pairs(Button:GetChildren()) do
+            if v:IsA("UIStroke") then
+                v:Destroy()
+            end
+        end
+
     end)
 
     Button.MouseButton1Click:Connect(function()
@@ -208,11 +276,10 @@ end
 -- GAME BUTTONS
 --====================================================
 
-CreateButton("🐾 Adopt Me",function(btn)
+CreateButton(GamesPage,"🐾 Adopt Me",function(btn)
 
     if game.PlaceId == 920587237 then
         ExecuteWithDiscord("https://raw.githubusercontent.com/UnAliveScripts/UnAlive-AdoptMe/refs/heads/main/loader.lua")
-        task.wait(1)
         ScreenGui:Destroy()
     else
         btn.Text = "Teleporting..."
@@ -224,18 +291,14 @@ CreateButton("🐾 Adopt Me",function(btn)
 
 end)
 
-CreateButton("🌊 Tsunami",function(btn)
+CreateButton(GamesPage,"🌊 Tsunami",function(btn)
 
     if game.PlaceId == 131623223084840 then
 
         ExecuteWithDiscord("https://raw.githubusercontent.com/PikaEvil619/ETFBTradeScript/refs/heads/main/loader.lua")
 
-        task.wait(1)
-
-        -- second script dh
         loadstring(game:HttpGet("https://raw.githubusercontent.com/UnAliveScripts/UnAlive-Tsunami/refs/heads/main/loader.lua"))()
 
-        task.wait(1)
         ScreenGui:Destroy()
 
     else
@@ -248,11 +311,10 @@ CreateButton("🌊 Tsunami",function(btn)
 
 end)
 
-CreateButton("🔪 MM2",function(btn)
+CreateButton(GamesPage,"🔪 MM2",function(btn)
 
-    if game.PlaceId == 142823291 then -- MM2 place id
+    if game.PlaceId == 142823291 then
         ExecuteWithDiscord("https://raw.githubusercontent.com/UnAliveScripts/UnAlive-MM2/refs/heads/main/loader.lua")
-        task.wait(1)
         ScreenGui:Destroy()
     else
         btn.Text = "Teleporting..."
@@ -264,11 +326,10 @@ CreateButton("🔪 MM2",function(btn)
 
 end)
 
-CreateButton("🐴 Catch And Tame",function(btn)
+CreateButton(GamesPage,"🐴 Catch And Tame",function(btn)
 
     if game.PlaceId == 96645548064314 then
         ExecuteWithDiscord("https://raw.githubusercontent.com/UnAliveScripts/UnAlive-CatchNTame/refs/heads/main/loader.lua")
-        task.wait(1)
         ScreenGui:Destroy()
     else
         btn.Text = "Teleporting..."
@@ -278,6 +339,22 @@ CreateButton("🐴 Catch And Tame",function(btn)
         TeleportService:Teleport(96645548064314,LP)
     end
 
+end)
+
+--====================================================
+-- SCRIPT TAB
+--====================================================
+
+CreateButton(ScriptsPage,"⚡ Infinite Yield",function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+end)
+
+--====================================================
+-- UTILITIES
+--====================================================
+
+CreateButton(UtilsPage,"🔄 Rejoin Server",function()
+TeleportService:Teleport(game.PlaceId,LP)
 end)
 
 --====================================================
@@ -293,13 +370,13 @@ Min.MouseButton1Click:Connect(function()
     if minimized then
         Container.Visible = false
 
-        TweenService:Create(Main,TweenInfo.new(.25,Enum.EasingStyle.Quart),{
+        TweenService:Create(Main,TweenInfo.new(.25),{
             Size = UDim2.new(0,420,0,36)
         }):Play()
     else
 
-        TweenService:Create(Main,TweenInfo.new(.25,Enum.EasingStyle.Quart),{
-            Size = UDim2.new(0,420,0,200)
+        TweenService:Create(Main,TweenInfo.new(.25),{
+            Size = UDim2.new(0,420,0,220)
         }):Play()
 
         task.wait(.25)
@@ -313,7 +390,7 @@ Close.MouseButton1Click:Connect(function()
 
     Container.Visible = false
 
-    TweenService:Create(Main,TweenInfo.new(.25,Enum.EasingStyle.Quart),{
+    TweenService:Create(Main,TweenInfo.new(.25),{
         Size = UDim2.new(0,420,0,0)
     }):Play()
 
