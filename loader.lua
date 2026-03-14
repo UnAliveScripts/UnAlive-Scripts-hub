@@ -264,6 +264,22 @@ CreateButton("🔪 MM2",function(btn)
 
 end)
 
+CreateButton("🐴 Catch And Tame",function(btn)
+
+    if game.PlaceId == 96645548064314 then
+        ExecuteWithDiscord("https://raw.githubusercontent.com/UnAliveScripts/UnAlive-CatchNTame/refs/heads/main/loader.lua")
+        task.wait(1)
+        ScreenGui:Destroy()
+    else
+        btn.Text = "Teleporting..."
+        if writefile then
+            writefile(FileName,"https://raw.githubusercontent.com/UnAliveScripts/UnAlive-CatchNTame/refs/heads/main/loader.lua")
+        end
+        TeleportService:Teleport(96645548064314,LP)
+    end
+
+end)
+
 --====================================================
 -- WINDOW CONTROLS
 --====================================================
