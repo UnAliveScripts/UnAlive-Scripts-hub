@@ -341,6 +341,21 @@ CreateButton(GamesPage,"🐴 Catch And Tame",function(btn)
 
 end)
 
+CreateButton(GamesPage,"🍓 SAB",function(btn)
+
+    if game.PlaceId == 109983668079237 then
+        ExecuteWithDiscord("https://raw.githubusercontent.com/UnAliveScripts/UnAlive-SAB/refs/heads/main/loader.lua")
+        ScreenGui:Destroy()
+    else
+        btn.Text = "Teleporting..."
+        if writefile then
+            writefile(FileName,"https://raw.githubusercontent.com/UnAliveScripts/UnAlive-SAB/refs/heads/main/loader.lua")
+        end
+        TeleportService:Teleport(109983668079237,LP)
+    end
+
+end)
+
 --====================================================
 -- SCRIPT TAB
 --====================================================
