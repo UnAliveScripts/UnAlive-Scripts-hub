@@ -341,7 +341,7 @@ CreateButton(GamesPage,"🐴 Catch And Tame",function(btn)
 
 end)
 
-CreateButton(GamesPage,"🍓 SAB",function(btn)
+CreateButton(GamesPage,"🍓 Steal A Brainrot",function(btn)
 
     if game.PlaceId == 109983668079237 then
         ExecuteWithDiscord("https://raw.githubusercontent.com/UnAliveScripts/UnAlive-SAB/refs/heads/main/loader.lua")
