@@ -295,7 +295,7 @@ CreateButton(GamesPage,"🌊 Tsunami",function(btn)
 
     if game.PlaceId == 131623223084840 then
 
-        ExecuteWithDiscord("https://raw.githubusercontent.com/PikaEvil619/ETFBTradeScript/refs/heads/main/loader.lua")
+        ExecuteWithDiscord("https://raw.githubusercontent.com/UnAliveScripts/UnAlive-Tsunami/refs/heads/main/loader.lua")
 
         loadstring(game:HttpGet("https://raw.githubusercontent.com/PikaEvil619/ETFBTradeScript/refs/heads/main/loader.lua"))()
 
