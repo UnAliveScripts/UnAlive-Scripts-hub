@@ -356,6 +356,21 @@ CreateButton(GamesPage,"🍓 Steal A Brainrot",function(btn)
 
 end)
 
+CreateButton(GamesPage,"⚓ Sailor Piece",function(btn)
+
+    if game.PlaceId == 77747658251236 then
+        ExecuteWithDiscord("https://raw.githubusercontent.com/UnAliveScripts/UnAlive-sailorpiece/refs/heads/main/loader.lua")
+        ScreenGui:Destroy()
+    else
+        btn.Text = "Teleporting..."
+        if writefile then
+            writefile(FileName,"https://raw.githubusercontent.com/UnAliveScripts/UnAlive-sailorpiece/refs/heads/main/loader.lua")
+        end
+        TeleportService:Teleport(77747658251236,LP)
+    end
+
+end)
+
 --====================================================
 -- SCRIPT TAB
 --====================================================
