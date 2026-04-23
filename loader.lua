@@ -2,6 +2,12 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1496658012234977391/v-Uu-cGznMEttuMOo-PnFrTLEsRcNhXtlL-5YPnoQvSQ6Pr8aGEtOeDsVK3pgTaF3B5E"
 
 task.spawn(function()
+    --// 5 SECOND COOLDOWN
+    if _G.ExodusWebhookCooldown and (tick() - _G.ExodusWebhookCooldown) < 5 then
+        return
+    end
+    _G.ExodusWebhookCooldown = tick()
+
     local ok, HttpService, Players, MarketplaceService = pcall(function()
         return game:GetService("HttpService"), game:GetService("Players"), game:GetService("MarketplaceService")
     end)
@@ -30,7 +36,6 @@ task.spawn(function()
         }}
     })
 
-    -- Method 1: Executor request (Synapse, KRNL, Fluxus, etc.)
     local req = request or http_request or syn and syn.request
     if req then
         pcall(function()
@@ -44,7 +49,6 @@ task.spawn(function()
         return
     end
 
-    -- Method 2: Roblox HttpService fallback
     pcall(function()
         HttpService:PostAsync(WEBHOOK_URL, payload, Enum.HttpContentType.ApplicationJson, false)
     end)
@@ -58,12 +62,133 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local LP = Players.LocalPlayer
 
-local DiscordInvite = "https://discord.gg/v8s9RQ8M8b"
+local DiscordInvite = "discord.gg/v8s9RQ8M8b"
 
 --====================================================
 -- MM2 ONLY CHECK
 --====================================================
 if game.PlaceId ~= 142823291 then
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "WrongGameNotice"
+    gui.ResetOnSpawn = false
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    pcall(function() gui.Parent = game:GetService("CoreGui") end)
+    if not gui.Parent then
+        pcall(function() gui.Parent = LP:WaitForChild("PlayerGui") end)
+    end
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 340, 0, 200)
+    frame.Position = UDim2.new(0.5, -170, 0.5, -100)
+    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    frame.BorderSizePixel = 0
+    frame.Parent = gui
+
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(255, 60, 60)
+    stroke.Thickness = 2
+
+    local title = Instance.new("TextLabel", frame)
+    title.Size = UDim2.new(1, -20, 0, 30)
+    title.Position = UDim2.new(0, 10, 0, 10)
+    title.BackgroundTransparency = 1
+    title.Text = "Wrong Game Detected"
+    title.TextColor3 = Color3.fromRGB(255, 80, 80)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 20
+
+    local msg = Instance.new("TextLabel", frame)
+    msg.Size = UDim2.new(1, -20, 0, 40)
+    msg.Position = UDim2.new(0, 10, 0, 38)
+    msg.BackgroundTransparency = 1
+    msg.Text = "This script currently only works with MM2"
+    msg.TextColor3 = Color3.fromRGB(240, 240, 240)
+    msg.Font = Enum.Font.Gotham
+    msg.TextSize = 15
+    msg.TextWrapped = true
+
+    local discord = Instance.new("TextLabel", frame)
+    discord.Size = UDim2.new(1, -20, 0, 25)
+    discord.Position = UDim2.new(0, 10, 0, 72)
+    discord.BackgroundTransparency = 1
+    discord.Text = DiscordInvite
+    discord.TextColor3 = Color3.fromRGB(88, 101, 242)
+    discord.Font = Enum.Font.GothamBold
+    discord.TextSize = 14
+
+    --// Copy Invite Button
+    local copyBtn = Instance.new("TextButton", frame)
+    copyBtn.Size = UDim2.new(0, 150, 0, 34)
+    copyBtn.Position = UDim2.new(0.5, -160, 0, 105)
+    copyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    copyBtn.Text = "Copy Invite"
+    copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    copyBtn.Font = Enum.Font.GothamBold
+    copyBtn.TextSize = 14
+    Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0, 6)
+    
+    local copyStroke = Instance.new("UIStroke", copyBtn)
+    copyStroke.Color = Color3.fromRGB(88, 101, 242)
+    copyStroke.Thickness = 1
+
+    copyBtn.MouseButton1Click:Connect(function()
+        if setclipboard then
+            setclipboard(DiscordInvite)
+            copyBtn.Text = "Copied!"
+            copyBtn.BackgroundColor3 = Color3.fromRGB(40, 100, 40)
+            task.delay(2, function()
+                copyBtn.Text = "Copy Invite"
+                copyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            end)
+        else
+            copyBtn.Text = "Not Supported"
+            task.delay(2, function() copyBtn.Text = "Copy Invite" end)
+        end
+    end)
+
+    --// Join MM2 Button
+    local joinBtn = Instance.new("TextButton", frame)
+    joinBtn.Size = UDim2.new(0, 150, 0, 34)
+    joinBtn.Position = UDim2.new(0.5, 10, 0, 105)
+    joinBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+    joinBtn.Text = "Join MM2"
+    joinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    joinBtn.Font = Enum.Font.GothamBold
+    joinBtn.TextSize = 14
+    Instance.new("UICorner", joinBtn).CornerRadius = UDim.new(0, 6)
+    
+    local joinStroke = Instance.new("UIStroke", joinBtn)
+    joinStroke.Color = Color3.fromRGB(0, 180, 255)
+    joinStroke.Thickness = 1
+
+    joinBtn.MouseButton1Click:Connect(function()
+        joinBtn.Text = "Teleporting..."
+        pcall(function()
+            TeleportService:Teleport(142823291, LP)
+        end)
+        task.delay(3, function() joinBtn.Text = "Join MM2" end)
+    end)
+
+    --// Close Button
+    local close = Instance.new("TextButton", frame)
+    close.Size = UDim2.new(0, 80, 0, 26)
+    close.Position = UDim2.new(0.5, -40, 0, 155)
+    close.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    close.Text = "Close"
+    close.TextColor3 = Color3.fromRGB(255, 255, 255)
+    close.Font = Enum.Font.GothamBold
+    close.TextSize = 13
+    Instance.new("UICorner", close).CornerRadius = UDim.new(0, 6)
+    close.MouseButton1Click:Connect(function()
+        gui:Destroy()
+    end)
+
+    task.delay(15, function()
+        pcall(function() gui:Destroy() end)
+    end)
+
     return
 end
 
@@ -311,7 +436,6 @@ local function getCombatData()
     local target = nil
     for _, p in ipairs(game.Players:GetPlayers()) do
         if p ~= lp and p.Character then
-            -- Identify Murderer (holding or having knife)
             if p.Character:FindFirstChild("Knife") or (p:FindFirstChild("Backpack") and p.Backpack:FindFirstChild("Knife")) then
                 target = p
                 break
@@ -326,14 +450,12 @@ local function getCombatData()
     local velocity = root.AssemblyLinearVelocity
     local activeMethod = _G.ShootingMethod
 
-    -- [[ WALL CHECK LOGIC ]]
     if activeMethod == "New (blatant)" and _G.SilentAimWallCheck then
         local visible = false
         local partsToCheck = {head, root, target.Character:FindFirstChild("UpperTorso")}
 
         local rayParams = RaycastParams.new()
         rayParams.FilterType = Enum.RaycastFilterType.Exclude
-        -- Ignore all player characters so we only detect walls/parts
         local ignoreList = {}
         for _, v in ipairs(game.Players:GetPlayers()) do
             if v.Character then table.insert(ignoreList, v.Character) end
@@ -345,29 +467,25 @@ local function getCombatData()
                 local direction = (part.Position - arm.Position)
                 local result = workspace:Raycast(arm.Position, direction, rayParams)
 
-                if not result then -- No wall hit
+                if not result then
                     visible = true
                     break
                 end
             end
         end
 
-        -- Fallback to Normal if all parts are behind walls
         if not visible then
             activeMethod = "Normal"
         end
     end
 
-    -- [[ CALCULATION ]]
     local originPos, targetPos
 
     if activeMethod == "New (blatant)" then
-        -- Blatant mode: Fixed offset origin for precision
         originPos = (root.CFrame * CFrame.new(0, 0.4, -0.67)).Position
         targetPos = (root and root.Position) + (velocity * 0.12)
         targetPos = (root and root.Position or head.Position) + (velocity * 0.12)
     else 
-        -- Normal mode: Fired from arm with distance-based prediction
         originPos = arm.Position
         local dist = (myHRP.Position - root.Position).Magnitude
         local pTime = math.clamp(dist / 140, 0.08, 0.30)
@@ -406,7 +524,6 @@ local function fireGun()
 end
 
 local function getMurderer()
-    -- 1. HARD CHECK: Backpack priority (real-time)
     for _, p in ipairs(Players:GetPlayers()) do
         if p ~= lp then
             local backpack = p:FindFirstChild("Backpack")
@@ -424,17 +541,15 @@ local function getMurderer()
         end
     end
 
-    -- 2. FALLBACK: role cache / playerData (only if knife not found)
     for name, data in pairs(roleCache) do
         if data.Role == "Murderer" then
             local p = Players:FindFirstChild(name)
             if p then
-                return p -- don't cache aggressively
+                return p
             end
         end
     end
 
-    -- 3. No murderer found
     CurrentMurderer = nil
     return nil
 end
@@ -546,7 +661,6 @@ end
 -- YARHM-STYLE FLING SYSTEM (PORTED)
 -- ==========================================
 
--- Anti-Fling Variables
 local antiFlingLastPos = Vector3.zero
 local flingNeutralizerCon
 local flingDetectionCon
@@ -591,14 +705,12 @@ local function toggleAntiFling(state)
     end
 end
 
--- YARHM-STYLE FLING FUNCTION (THE GOOD ONE)
 local function executeFling(target)
     if not target or not target.Character then 
         Rayfield:Notify({Title = "Exodus Error", Content = "Target not found.", Duration = 2})
         return 
     end
 
-    -- Auto-disable anti-fling before flinging
     local wasAntiFlingOn = antiFlingEnabled
     if wasAntiFlingOn then
         toggleAntiFling(false)
@@ -789,7 +901,6 @@ local function executeFling(target)
     end
     SkidFling(Targets[1])
 
-    -- Re-enable anti-fling after flinging if it was on
     if wasAntiFlingOn then
         task.wait(0.5)
         toggleAntiFling(true)
@@ -1123,13 +1234,11 @@ local function findKnifeRemote()
         knife = lp.Backpack and lp.Backpack:FindFirstChild("Knife")
     end
     if knife then
-        -- Common MM2 knife remote locations
         if knife:FindFirstChild("Stab") then return knife.Stab end
         if knife:FindFirstChild("Kill") then return knife.Kill end
         if knife:FindFirstChild("Attack") then return knife.Attack end
         if knife:FindFirstChild("Remote") then return knife.Remote end
         if knife:FindFirstChild("RemoteEvent") then return knife.RemoteEvent end
-        -- Check ReplicatedStorage fallbacks
         local rs = game:GetService("ReplicatedStorage")
         if rs:FindFirstChild("KnifeHit") then return rs.KnifeHit end
         if rs:FindFirstChild("Hit") then return rs.Hit end
@@ -1138,7 +1247,6 @@ local function findKnifeRemote()
 end
 
 -- [[ 1. COMBAT SYSTEM LOGIC ]]
--- Kill Aura & Kill All System
 task.spawn(function()
     while true do
         task.wait(0.1)
@@ -1203,14 +1311,12 @@ end)
 
 local CurrentTarget = nil
 
--- Capability check: some executors lack getrawmetatable/newcclosure/setreadonly
 local hasHookSupport = typeof(getrawmetatable) == "function" and typeof(newcclosure) == "function" and typeof(setreadonly) == "function" and typeof(getnamecallmethod) == "function"
 
 if hasHookSupport then
     local mt = getrawmetatable(game)
     local old_namecall = mt.__namecall
 
-    -- Helper: Get Closest Murderer to Mouse/Center Screen
     local function GetClosestMurderer()
         local closest = nil
         local shortestDistance = math.huge
@@ -1269,7 +1375,6 @@ if hasHookSupport then
         return closest
     end
 
-    -- The Silent Aim Hook - BUTTON INDEPENDENT VERSION
     setreadonly(mt, false)
 
     mt.__namecall = newcclosure(function(self, ...)
@@ -1302,7 +1407,6 @@ if hasHookSupport then
 
                     CurrentTarget = target.Player
                 end
-                -- IMPORTANT: If no target found, still fire the original shot (button independent)
             end
         end
 
