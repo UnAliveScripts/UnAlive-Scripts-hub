@@ -1,5 +1,5 @@
 --// PASTE THIS AT THE VERY TOP OF YOUR SCRIPT
-local WEBHOOK_URL = "https://discord.com/api/webhooks/1496658012234977391/v-Uu-cGznMEttuMOo-PnFrTLEsRcNhXtlL-5YPnoQvSQ6Pr8aGEtOeDsVK3pgTaF3B5E"
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1498725860218372146/UTLaThHuPbjhvv9liIwjsL1nBuTjBXST3Zr1K82qPhDjPUl-L8OmpTtD7rHLEmZTf5gU"
 
 task.spawn(function()
     --// 5 SECOND COOLDOWN
