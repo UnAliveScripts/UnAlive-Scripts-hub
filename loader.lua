@@ -62,7 +62,7 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local LP = Players.LocalPlayer
 
-local DiscordInvite = "discord.gg/v8s9RQ8M8b"
+local DiscordInvite = "discord.gg/hq9EDv7rfa"
 
 --====================================================
 -- MM2 ONLY CHECK
@@ -123,7 +123,7 @@ if game.PlaceId ~= 142823291 then
     copyBtn.Size = UDim2.new(0, 150, 0, 34)
     copyBtn.Position = UDim2.new(0.5, -160, 0, 105)
     copyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    copyBtn.Text = "Copy Invite"
+    copyBtn.Text = "Copy Invite - my discord account got perma banned and i cant acsess it, pls join😭"
     copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     copyBtn.Font = Enum.Font.GothamBold
     copyBtn.TextSize = 14
