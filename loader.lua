@@ -65,9 +65,16 @@ local LP = Players.LocalPlayer
 local DiscordInvite = "discord.gg/hq9EDv7rfa"
 
 --====================================================
--- MM2 ONLY CHECK
+-- MM2 ONLY CHECK (CENTERED + BLUR)
 --====================================================
 if game.PlaceId ~= 142823291 then
+    local TweenService = game:GetService("TweenService")
+    local RunService = game:GetService("RunService")
+    local HS = game:GetService("HttpService")
+    local camera = workspace.CurrentCamera
+    local Lighting = game:GetService("Lighting")
+    local LP = Players.LocalPlayer
+
     local gui = Instance.new("ScreenGui")
     gui.Name = "WrongGameNotice"
     gui.ResetOnSpawn = false
@@ -77,121 +84,428 @@ if game.PlaceId ~= 142823291 then
         pcall(function() gui.Parent = LP:WaitForChild("PlayerGui") end)
     end
 
+    --// BLUR SYSTEM SETUP
+    local MTREL = "Glass"
+    local wedgeguid = HS:GenerateGUID(true)
+    local blurFolder = Instance.new("Folder", camera)
+    blurFolder.Name = HS:GenerateGUID(true)
+
+    local DepthOfField
+    for _, v in pairs(Lighting:GetChildren()) do
+        if v:IsA("DepthOfFieldEffect") and v:HasTag(".") then
+            DepthOfField = v
+            break
+        end
+    end
+    if not DepthOfField then
+        DepthOfField = Instance.new("DepthOfFieldEffect", Lighting)
+        DepthOfField.FarIntensity = 0
+        DepthOfField.FocusDistance = 51.6
+        DepthOfField.InFocusRadius = 50
+        DepthOfField.NearIntensity = 1
+        DepthOfField.Name = HS:GenerateGUID(true)
+        DepthOfField:AddTag(".")
+    end
+
+    local function IsNotNaN(x) return x == x end
+    while not IsNotNaN(camera:ScreenPointToRay(0, 0).Origin.X) do
+        RunService.RenderStepped:Wait()
+    end
+
+    local function DrawTriangle(v1, v2, v3, p0, p1)
+        local acos, max, pi, sqrt = math.acos, math.max, math.pi, math.sqrt
+        local sz = 0.2
+        local s1 = (v1 - v2).Magnitude
+        local s2 = (v2 - v3).Magnitude
+        local s3 = (v3 - v1).Magnitude
+        local smax = max(s1, s2, s3)
+        local A, B, C
+        if s1 == smax then A, B, C = v1, v2, v3
+        elseif s2 == smax then A, B, C = v2, v3, v1
+        else A, B, C = v3, v1, v2 end
+
+        local para = ((B - A).X * (C - A).X + (B - A).Y * (C - A).Y + (B - A).Z * (C - A).Z) / (A - B).Magnitude
+        local perp = math.sqrt((C - A).Magnitude ^ 2 - para * para)
+        local dif_para = (A - B).Magnitude - para
+
+        local st = CFrame.new(B, A)
+        local za = CFrame.Angles(pi / 2, 0, 0)
+        local cf0 = st
+        local Top_Look = (cf0 * za).LookVector
+        local Mid_Point = A + CFrame.new(A, B).LookVector * para
+        local Needed_Look = CFrame.new(Mid_Point, C).LookVector
+        local dot = Top_Look.X * Needed_Look.X + Top_Look.Y * Needed_Look.Y + Top_Look.Z * Needed_Look.Z
+        local ac = CFrame.Angles(0, 0, acos(dot))
+
+        cf0 = cf0 * ac
+        if ((cf0 * za).LookVector - Needed_Look).Magnitude > 0.01 then
+            cf0 = cf0 * CFrame.Angles(0, 0, -2 * acos(dot))
+        end
+        cf0 = cf0 * CFrame.new(0, perp / 2, -(dif_para + para / 2))
+
+        local cf1 = st * ac * CFrame.Angles(0, pi, 0)
+        if ((cf1 * za).LookVector - Needed_Look).Magnitude > 0.01 then
+            cf1 = cf1 * CFrame.Angles(0, 0, 2 * acos(dot))
+        end
+        cf1 = cf1 * CFrame.new(0, perp / 2, dif_para / 2)
+
+        if not p0 then
+            p0 = Instance.new("Part")
+            p0.FormFactor = Enum.FormFactor.Custom
+            p0.TopSurface = Enum.SurfaceType.Smooth
+            p0.BottomSurface = Enum.SurfaceType.Smooth
+            p0.Anchored = true
+            p0.CanCollide = false
+            p0.CastShadow = false
+            p0.Material = Enum.Material[MTREL]
+            p0.Size = Vector3.new(sz, sz, sz)
+            p0.Name = HS:GenerateGUID(true)
+            local mesh = Instance.new("SpecialMesh", p0)
+            mesh.MeshType = Enum.MeshType.Wedge
+            mesh.Name = wedgeguid
+        end
+        p0[wedgeguid].Scale = Vector3.new(0, perp / sz, para / sz)
+        p0.CFrame = cf0
+
+        if not p1 then
+            p1 = p0:Clone()
+        end
+        p1[wedgeguid].Scale = Vector3.new(0, perp / sz, dif_para / sz)
+        p1.CFrame = cf1
+
+        return p0, p1
+    end
+
+    local function DrawQuad(v1, v2, v3, v4, parts)
+        parts[1], parts[2] = DrawTriangle(v1, v2, v3, parts[1], parts[2])
+        parts[3], parts[4] = DrawTriangle(v3, v2, v4, parts[3], parts[4])
+    end
+
+    --// Main Card (CENTERED)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 340, 0, 200)
-    frame.Position = UDim2.new(0.5, -170, 0.5, -100)
-    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    frame.Size = UDim2.new(0, 420, 0, 0)
+    frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    frame.AnchorPoint = Vector2.new(0.5, 0.5)
+    frame.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
+    frame.BackgroundTransparency = 0.05
     frame.BorderSizePixel = 0
+    frame.ClipsDescendants = true
     frame.Parent = gui
 
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 24)
 
-    local stroke = Instance.new("UIStroke", frame)
-    stroke.Color = Color3.fromRGB(255, 60, 60)
-    stroke.Thickness = 2
+    --// Blur parts
+    local blurParts = {}
+    local blurPartFolder = Instance.new("Folder", blurFolder)
+    blurPartFolder.Name = HS:GenerateGUID(true)
 
-    local title = Instance.new("TextLabel", frame)
-    title.Size = UDim2.new(1, -20, 0, 30)
-    title.Position = UDim2.new(0, 10, 0, 10)
+    for i = 1, 4 do
+        blurParts[i] = nil
+    end
+
+    local blurConn
+    local function UpdateBlur()
+        if not frame or not frame.Parent then return end
+        if not frame.Visible then
+            for _, pt in pairs(blurParts) do
+                if pt then pt.Parent = nil end
+            end
+            return
+        end
+
+        local zIndex = 1 - 0.05 * frame.ZIndex
+        local tl = frame.AbsolutePosition
+        local br = frame.AbsolutePosition + frame.AbsoluteSize
+        local tr = Vector2.new(br.X, tl.Y)
+        local bl = Vector2.new(tl.X, br.Y)
+
+        local rot = 0
+        local instance = frame
+        while instance do
+            if instance:IsA("GuiObject") then
+                rot = rot + instance.Rotation
+            end
+            instance = instance.Parent
+        end
+
+        if rot ~= 0 and rot % 180 ~= 0 then
+            local mid = tl:Lerp(br, 0.5)
+            local s, c = math.sin(math.rad(rot)), math.cos(math.rad(rot))
+            local function rotate(vec)
+                return Vector2.new(c * (vec.X - mid.X) - s * (vec.Y - mid.Y), s * (vec.X - mid.X) + c * (vec.Y - mid.Y)) + mid
+            end
+            tl, tr, bl, br = rotate(tl), rotate(tr), rotate(bl), rotate(br)
+        end
+
+        DrawQuad(
+            camera:ScreenPointToRay(tl.X, tl.Y, zIndex).Origin,
+            camera:ScreenPointToRay(tr.X, tr.Y, zIndex).Origin,
+            camera:ScreenPointToRay(bl.X, bl.Y, zIndex).Origin,
+            camera:ScreenPointToRay(br.X, br.Y, zIndex).Origin,
+            blurParts
+        )
+
+        for _, pt in pairs(blurParts) do
+            pt.Parent = blurPartFolder
+            pt.Transparency = 0.96
+            pt.BrickColor = BrickColor.new("Institutional white")
+            pt.Material = Enum.Material[MTREL]
+        end
+    end
+
+    blurConn = RunService.RenderStepped:Connect(UpdateBlur)
+
+    --// Top gradient bar
+    local gradBar = Instance.new("Frame")
+    gradBar.Size = UDim2.new(1, 0, 0, 4)
+    gradBar.BorderSizePixel = 0
+    gradBar.ZIndex = 2
+    gradBar.Parent = frame
+
+    local grad = Instance.new("UIGradient")
+    grad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 50, 50)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 100, 60))
+    })
+    grad.Parent = gradBar
+
+    --// Content Layout
+    local content = Instance.new("Frame")
+    content.Size = UDim2.new(1, -56, 1, -56)
+    content.Position = UDim2.new(0, 28, 0, 28)
+    content.BackgroundTransparency = 1
+    content.Parent = frame
+
+    local list = Instance.new("UIListLayout")
+    list.FillDirection = Enum.FillDirection.Vertical
+    list.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    list.VerticalAlignment = Enum.VerticalAlignment.Top
+    list.Padding = UDim.new(0, 16)
+    list.Parent = content
+
+    local pad = Instance.new("UIPadding")
+    pad.PaddingTop = UDim.new(0, 10)
+    pad.PaddingBottom = UDim.new(0, 10)
+    pad.Parent = content
+
+    --// Warning Icon
+    local iconBg = Instance.new("Frame")
+    iconBg.Size = UDim2.new(0, 60, 0, 60)
+    iconBg.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    iconBg.BackgroundTransparency = 0.9
+    iconBg.BorderSizePixel = 0
+    Instance.new("UICorner", iconBg).CornerRadius = UDim.new(1, 0)
+    iconBg.Parent = content
+
+    local icon = Instance.new("ImageLabel")
+    icon.Size = UDim2.new(0, 30, 0, 30)
+    icon.Position = UDim2.new(0.5, -15, 0.5, -15)
+    icon.BackgroundTransparency = 1
+    icon.Image = "rbxassetid://3944668821"
+    icon.ImageColor3 = Color3.fromRGB(255, 70, 70)
+    icon.Parent = iconBg
+
+    --// Title
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 32)
     title.BackgroundTransparency = 1
     title.Text = "Wrong Game Detected"
-    title.TextColor3 = Color3.fromRGB(255, 80, 80)
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 20
+    title.TextColor3 = Color3.fromRGB(240, 240, 245)
+    title.Font = Enum.Font.GothamBlack
+    title.TextSize = 24
+    title.Parent = content
 
-    local msg = Instance.new("TextLabel", frame)
-    msg.Size = UDim2.new(1, -20, 0, 40)
-    msg.Position = UDim2.new(0, 10, 0, 38)
-    msg.BackgroundTransparency = 1
-    msg.Text = "This script currently only works with MM2"
-    msg.TextColor3 = Color3.fromRGB(240, 240, 240)
-    msg.Font = Enum.Font.Gotham
-    msg.TextSize = 15
-    msg.TextWrapped = true
+    --// Subtitle
+    local subtitle = Instance.new("TextLabel")
+    subtitle.Size = UDim2.new(1, 0, 0, 18)
+    subtitle.BackgroundTransparency = 1
+    subtitle.Text = "This script only works in Murder Mystery 2"
+    subtitle.TextColor3 = Color3.fromRGB(130, 130, 140)
+    subtitle.Font = Enum.Font.Gotham
+    subtitle.TextSize = 13
+    subtitle.Parent = content
 
-    local discord = Instance.new("TextLabel", frame)
-    discord.Size = UDim2.new(1, -20, 0, 25)
-    discord.Position = UDim2.new(0, 10, 0, 72)
-    discord.BackgroundTransparency = 1
-    discord.Text = DiscordInvite
-    discord.TextColor3 = Color3.fromRGB(88, 101, 242)
-    discord.Font = Enum.Font.GothamBold
-    discord.TextSize = 14
+    --// Ban notice pill
+    local noticePill = Instance.new("Frame")
+    noticePill.Size = UDim2.new(1, 0, 0, 0)
+    noticePill.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    noticePill.BackgroundTransparency = 0.2
+    noticePill.BorderSizePixel = 0
+    noticePill.AutomaticSize = Enum.AutomaticSize.Y
+    Instance.new("UICorner", noticePill).CornerRadius = UDim.new(0, 14)
+    noticePill.Parent = content
 
-    --// Copy Invite Button
-    local copyBtn = Instance.new("TextButton", frame)
-    copyBtn.Size = UDim2.new(0, 150, 0, 34)
-    copyBtn.Position = UDim2.new(0.5, -160, 0, 105)
-    copyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    copyBtn.Text = "Copy Invite - my discord account got perma banned and i cant acsess it, pls join😭"
-    copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    copyBtn.Font = Enum.Font.GothamBold
-    copyBtn.TextSize = 14
-    Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0, 6)
-    
-    local copyStroke = Instance.new("UIStroke", copyBtn)
-    copyStroke.Color = Color3.fromRGB(88, 101, 242)
-    copyStroke.Thickness = 1
+    local noticePad = Instance.new("UIPadding")
+    noticePad.PaddingTop = UDim.new(0, 14)
+    noticePad.PaddingBottom = UDim.new(0, 14)
+    noticePad.PaddingLeft = UDim.new(0, 16)
+    noticePad.PaddingRight = UDim.new(0, 16)
+    noticePad.Parent = noticePill
+
+    local noticeText = Instance.new("TextLabel")
+    noticeText.Size = UDim2.new(1, 0, 0, 0)
+    noticeText.BackgroundTransparency = 1
+    noticeText.Text = "😭  My Discord account got permanently banned and I can't access it. Please join my new server!"
+    noticeText.TextColor3 = Color3.fromRGB(190, 190, 200)
+    noticeText.Font = Enum.Font.Gotham
+    noticeText.TextSize = 12
+    noticeText.TextWrapped = true
+    noticeText.AutomaticSize = Enum.AutomaticSize.Y
+    noticeText.Parent = noticePill
+
+    --// Discord Code Pill
+    local codePill = Instance.new("Frame")
+    codePill.Size = UDim2.new(0, 230, 0, 38)
+    codePill.BackgroundColor3 = Color3.fromRGB(78, 90, 220)
+    codePill.BackgroundTransparency = 0.1
+    codePill.BorderSizePixel = 0
+    Instance.new("UICorner", codePill).CornerRadius = UDim.new(1, 0)
+    codePill.Parent = content
+
+    local codeText = Instance.new("TextLabel")
+    codeText.Size = UDim2.new(1, 0, 1, 0)
+    codeText.BackgroundTransparency = 1
+    codeText.Text = DiscordInvite
+    codeText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    codeText.Font = Enum.Font.GothamBold
+    codeText.TextSize = 14
+    codeText.Parent = codePill
+
+    --// Button Row
+    local btnRow = Instance.new("Frame")
+    btnRow.Size = UDim2.new(1, 0, 0, 48)
+    btnRow.BackgroundTransparency = 1
+    btnRow.Parent = content
+
+    local btnList = Instance.new("UIListLayout")
+    btnList.FillDirection = Enum.FillDirection.Horizontal
+    btnList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    btnList.VerticalAlignment = Enum.VerticalAlignment.Center
+    btnList.Padding = UDim.new(0, 14)
+    btnList.Parent = btnRow
+
+    --// Button factory
+    local function makePill(text, bgColor, iconChar)
+        local pill = Instance.new("TextButton")
+        pill.Size = UDim2.new(0, 155, 0, 46)
+        pill.BackgroundColor3 = bgColor
+        pill.Text = (iconChar and iconChar .. "  " or "") .. text
+        pill.TextColor3 = Color3.fromRGB(255, 255, 255)
+        pill.Font = Enum.Font.GothamBold
+        pill.TextSize = 14
+        pill.AutoButtonColor = false
+        Instance.new("UICorner", pill).CornerRadius = UDim.new(1, 0)
+
+        local stroke = Instance.new("UIStroke")
+        stroke.Color = bgColor:Lerp(Color3.new(1, 1, 1), 0.15)
+        stroke.Thickness = 1.5
+        stroke.Transparency = 0.6
+        stroke.Parent = pill
+
+        pill.MouseEnter:Connect(function()
+            TweenService:Create(pill, TweenInfo.new(0.2), {BackgroundColor3 = bgColor:Lerp(Color3.new(1,1,1), 0.1)}):Play()
+            TweenService:Create(stroke, TweenInfo.new(0.2), {Transparency = 0.2}):Play()
+        end)
+        pill.MouseLeave:Connect(function()
+            TweenService:Create(pill, TweenInfo.new(0.2), {BackgroundColor3 = bgColor}):Play()
+            TweenService:Create(stroke, TweenInfo.new(0.2), {Transparency = 0.6}):Play()
+        end)
+
+        return pill
+    end
+
+    --// Copy Button
+    local copyBtn = makePill("Copy Invite", Color3.fromRGB(42, 42, 52), "📋")
+    copyBtn.Parent = btnRow
 
     copyBtn.MouseButton1Click:Connect(function()
         if setclipboard then
             setclipboard(DiscordInvite)
-            copyBtn.Text = "Copied!"
-            copyBtn.BackgroundColor3 = Color3.fromRGB(40, 100, 40)
+            copyBtn.Text = "✅  Copied!"
+            TweenService:Create(copyBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(40, 140, 70)}):Play()
             task.delay(2, function()
-                copyBtn.Text = "Copy Invite"
-                copyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                copyBtn.Text = "📋  Copy Invite"
+                TweenService:Create(copyBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(42, 42, 52)}):Play()
             end)
         else
-            copyBtn.Text = "Not Supported"
-            task.delay(2, function() copyBtn.Text = "Copy Invite" end)
+            copyBtn.Text = "❌  Unsupported"
+            task.delay(2, function() copyBtn.Text = "📋  Copy Invite" end)
         end
     end)
 
-    --// Join MM2 Button
-    local joinBtn = Instance.new("TextButton", frame)
-    joinBtn.Size = UDim2.new(0, 150, 0, 34)
-    joinBtn.Position = UDim2.new(0.5, 10, 0, 105)
-    joinBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-    joinBtn.Text = "Join MM2"
-    joinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    joinBtn.Font = Enum.Font.GothamBold
-    joinBtn.TextSize = 14
-    Instance.new("UICorner", joinBtn).CornerRadius = UDim.new(0, 6)
-    
-    local joinStroke = Instance.new("UIStroke", joinBtn)
-    joinStroke.Color = Color3.fromRGB(0, 180, 255)
-    joinStroke.Thickness = 1
+    --// Join Button
+    local joinBtn = makePill("Join MM2", Color3.fromRGB(0, 110, 235), "🎮")
+    joinBtn.Parent = btnRow
 
     joinBtn.MouseButton1Click:Connect(function()
-        joinBtn.Text = "Teleporting..."
+        joinBtn.Text = "⏳  Teleporting..."
         pcall(function()
             TeleportService:Teleport(142823291, LP)
         end)
-        task.delay(3, function() joinBtn.Text = "Join MM2" end)
+        task.delay(4, function()
+            joinBtn.Text = "🎮  Join MM2"
+        end)
     end)
 
-    --// Close Button
-    local close = Instance.new("TextButton", frame)
-    close.Size = UDim2.new(0, 80, 0, 26)
-    close.Position = UDim2.new(0.5, -40, 0, 155)
-    close.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    close.Text = "Close"
-    close.TextColor3 = Color3.fromRGB(255, 255, 255)
-    close.Font = Enum.Font.GothamBold
-    close.TextSize = 13
-    Instance.new("UICorner", close).CornerRadius = UDim.new(0, 6)
-    close.MouseButton1Click:Connect(function()
-        gui:Destroy()
+    --// Close (X)
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 32, 0, 32)
+    closeBtn.Position = UDim2.new(1, -42, 0, 10)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    closeBtn.BackgroundTransparency = 0.92
+    closeBtn.Text = "✕"
+    closeBtn.TextColor3 = Color3.fromRGB(120, 120, 130)
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.TextSize = 13
+    closeBtn.AutoButtonColor = false
+    Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1, 0)
+    closeBtn.Parent = frame
+
+    closeBtn.MouseEnter:Connect(function()
+        TweenService:Create(closeBtn, TweenInfo.new(0.2), {BackgroundTransparency = 0.25, TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+    end)
+    closeBtn.MouseLeave:Connect(function()
+        TweenService:Create(closeBtn, TweenInfo.new(0.2), {BackgroundTransparency = 0.92, TextColor3 = Color3.fromRGB(120,120,130)}):Play()
     end)
 
+    closeBtn.MouseButton1Click:Connect(function()
+        if blurConn then blurConn:Disconnect() end
+        for _, pt in pairs(blurParts) do
+            if pt then pt:Destroy() end
+        end
+        blurPartFolder:Destroy()
+        TweenService:Create(frame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+        task.delay(0.4, function() gui:Destroy() end)
+    end)
+
+    --// Animate in (CENTERED)
+    task.defer(function()
+        task.wait()
+        local contentHeight = list.AbsoluteContentSize.Y + 20
+        local finalHeight = math.max(contentHeight + 56, 280)
+
+        frame.Size = UDim2.new(0, 420, 0, 0)
+
+        TweenService:Create(frame, TweenInfo.new(0.55, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 420, 0, finalHeight)
+        }):Play()
+    end)
+
+    --// Auto destroy
     task.delay(15, function()
-        pcall(function() gui:Destroy() end)
+        pcall(function()
+            if blurConn then blurConn:Disconnect() end
+            for _, pt in pairs(blurParts) do
+                if pt then pt:Destroy() end
+            end
+            blurPartFolder:Destroy()
+            TweenService:Create(frame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+            task.delay(0.4, function() gui:Destroy() end)
+        end)
     end)
 
     return
 end
-
 --====================================================
 -- ANTI-KICK
 --====================================================
